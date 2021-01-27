@@ -1,4 +1,4 @@
-# CGE-SS2020
+# CGSE-WS2020
 Einführung in die Computer Grafik
 
 ### Entwicklungsumgebung
