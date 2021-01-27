@@ -237,6 +237,10 @@ void GraphicsService::run() {
 	// Tells the gpu to not draw triangles behind the camera
 	glEnable(GL_CULL_FACE);
 
+	// enable blending
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
 	GLuint vertexArrayID;
 	glGenVertexArrays(1, &vertexArrayID);
 	glBindVertexArray(vertexArrayID);
@@ -279,10 +283,6 @@ void GraphicsService::run() {
 		glBindBuffer(GL_ARRAY_BUFFER, model.normalBuffer);
 		glBufferData(GL_ARRAY_BUFFER, model.normals.size() * sizeof(glm::vec3), &model.normals[0], GL_STATIC_DRAW);
 	}
-	
-	// enable blending
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	// Get a handle for our "LightPosition" uniform
 	glUseProgram(programID);
@@ -336,7 +336,6 @@ void GraphicsService::run() {
 
 		// Alpha
 		float alpha = ControlService::getTransparent() ? 0.5f : 1.0f;
-		printf("%f\n", alpha);
 		glUniform1f(glGetUniformLocation(programID, "alpha"), alpha);
 		
 
