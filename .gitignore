@@ -34,5 +34,3 @@
 # Visual Studio
 .vs
 Debug
-*.vcxproj
-*.vcxproj.filters
