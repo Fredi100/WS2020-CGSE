@@ -47,28 +47,26 @@ void ControlService::ComputeMatricesFromInput()
 	//Movement Handling
 	if (!AnimationPlaying)
 	{
-		if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+		if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
 		{
 			AnimationPlaying = true;
 		}
-		if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
+		if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
 		{
 			position += direction * deltaTime * speed;
 		}
-		if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
+		if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
 		{
 			position -= direction * deltaTime * speed;
 		}
-		if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
+		if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
 		{
 			position += right * deltaTime * speed;
 		}
-		if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
+		if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
 		{
 			position -= right * deltaTime * speed;
-		}
-
-		
+		}		
 	}
 	else
 	{
