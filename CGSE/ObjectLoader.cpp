@@ -14,6 +14,8 @@ bool ObjectLoader::loadOBJ(const char* path,
 
     FILE* file = fopen(path, "r");
 
+    printf(path);
+
     if (file == NULL) {
         printf("Impossible to open the file !\n");
         return false;
