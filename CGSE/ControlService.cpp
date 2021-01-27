@@ -11,6 +11,7 @@ glm::mat4 ControlService::ProjectionMatrix = glm::mat4(0.0f);
 GLFWwindow* ControlService::window = nullptr;
 bool AnimationPlaying = false;
 int counter = 0;
+ControlService::windowSize size = ControlService::windowSize(1600, 1200);
 
 void ControlService::ComputeMatricesFromInput() 
 {
@@ -21,10 +22,10 @@ void ControlService::ComputeMatricesFromInput()
 	double xpos, ypos;
 	glfwGetCursorPos(window, &xpos, &ypos);
 
-	glfwSetCursorPos(window, 1024 / 2, 768 / 2); // TODO: Fix this meme
+	glfwSetCursorPos(window, size.width / 2, size.height / 2);
 
-	horizontalAngle += mouseSpeed * float(1024 / 2 - xpos);
-	verticalAngle += mouseSpeed * float(768 / 2 - ypos);
+	horizontalAngle += mouseSpeed * float(size.width / 2 - xpos);
+	verticalAngle += mouseSpeed * float(size.height / 2 - ypos);
 
 	//Direction Vector (Polar to Cartesian conversion)
 	glm::vec3 direction(
@@ -66,6 +67,8 @@ void ControlService::ComputeMatricesFromInput()
 		{
 			position -= right * deltaTime * speed;
 		}
+
+		
 	}
 	else
 	{
@@ -91,7 +94,21 @@ void ControlService::ComputeMatricesFromInput()
 
 }
 
-void ControlService::initialize()
-{
+float ControlService::getDistanceFromOrigin() {
+	return glm::length(position);
+}
+
+bool ControlService::getTransparent() {
+	if (glfwGetKey(window, GLFW_KEY_T) == GLFW_PRESS) {
+		return true;
+	}
+	return false;
+}
+
+ControlService::windowSize ControlService::getWindowSize() {
+	return size;
+}
+
+void ControlService::initialize(){
 
 }

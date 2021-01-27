@@ -161,6 +161,10 @@
     <ClInclude Include="GraphicsService.h" />
     <ClInclude Include="ObjectLoader.h" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="SimpleFragmentShader.glsl" />
+    <None Include="SimpleVertexShader.glsl" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

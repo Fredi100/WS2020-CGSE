@@ -39,4 +39,12 @@
       <Filter>Headerdateien</Filter>
     </ClInclude>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="SimpleFragmentShader.glsl">
+      <Filter>Ressourcendateien</Filter>
+    </None>
+    <None Include="SimpleVertexShader.glsl">
+      <Filter>Ressourcendateien</Filter>
+    </None>
+  </ItemGroup>
 </Project>

@@ -28,7 +28,6 @@ private:
 	static float speed;
 	static float mouseSpeed;
 
-
 	static GLFWwindow* window;
 
 
@@ -41,7 +40,7 @@ public:
 		return ViewMatrix;
 	}
 
-	static glm::mat4  getProjectionMatrix() {
+	static glm::mat4 getProjectionMatrix() {
 		return ProjectionMatrix;
 	}
 
@@ -50,6 +49,16 @@ public:
 		ControlService::window = window;
 	}
 
+	typedef struct windowSize {
+		int width;
+		int height;
+		windowSize(int width, int height) : width(width), height(height) {};
+	} windowSize;
+
+	static windowSize getWindowSize();
+
+	static float getDistanceFromOrigin();
+	static bool getTransparent();
 	static void ComputeMatricesFromInput();
 	static void initialize();
 

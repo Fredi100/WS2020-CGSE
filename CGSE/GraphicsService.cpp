@@ -2,6 +2,16 @@
 
 ControlService* GraphicsService::cService = nullptr;
 
+typedef struct model { // TODO Move to header
+	std::vector<glm::vec3> vertices;
+	std::vector<glm::vec2> uvs;
+	std::vector<glm::vec3> normals;
+
+	GLuint vertexBuffer;
+	GLuint uvBuffer;
+	GLuint normalBuffer;
+} model;
+
 GLuint GraphicsService::loadBMP_custom(const char* imagepath)
 {
 	uint8_t header[54]; // 54 Byte Header each BMP file has
@@ -175,7 +185,8 @@ void GraphicsService::initialize() {
 	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 	glfwWindowHint(GLFW_RESIZABLE, GL_TRUE);
 
-	window = glfwCreateWindow(1024, 768, "Cooler Titel", NULL, NULL);
+
+	window = glfwCreateWindow(ControlService::getWindowSize().width, ControlService::getWindowSize().height, "Cooler Titel", NULL, NULL);
 
 	if (!window) { // Window creation failed
 		glfwTerminate();
@@ -194,7 +205,7 @@ void GraphicsService::initialize() {
 		std::cout << "Failed to initialize GLEW" << std::endl;
 		exit(EXIT_FAILURE);
 	}
-	glfwSetCursorPos(window, 1024 / 2, 768 / 2); // TODO: Fix this meme
+	glfwSetCursorPos(window, ControlService::getWindowSize().width / 2, ControlService::getWindowSize().height / 2);
 
 	std::cout << "Successfully initialized GLFW" << std::endl;
 }
@@ -245,28 +256,33 @@ void GraphicsService::run() {
 	GLuint textureId = glGetUniformLocation(programID, "myTextureSampler");
 
 	// Read our .obj file
-	std::vector<glm::vec3> vertices;
-	std::vector<glm::vec2> uvs;
-	std::vector<glm::vec3> normals;
-	bool res = ObjectLoader::loadOBJ("Hammer.obj", vertices, uvs, normals);
 
-	// Loading Vertices
-	GLuint vertexBuffer;
-	glGenBuffers(1, &vertexBuffer);
-	glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
-	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(glm::vec3), &vertices[0], GL_STATIC_DRAW);
+	std::vector<model> models = {model(), model(), model()};
 
-	// Loading UVs
-	GLuint uvbuffer;
-	glGenBuffers(1, &uvbuffer);
-	glBindBuffer(GL_ARRAY_BUFFER, uvbuffer);
-	glBufferData(GL_ARRAY_BUFFER, uvs.size() * sizeof(glm::vec2), &uvs[0], GL_STATIC_DRAW);
+	ObjectLoader::loadOBJ("Hammer.obj", models[0].vertices, models[0].uvs, models[0].normals);
+	ObjectLoader::loadOBJ("Cube.obj", models[1].vertices, models[1].uvs, models[1].normals);
+	ObjectLoader::loadOBJ("Bottle.obj", models[2].vertices, models[2].uvs, models[2].normals);
 
-	// Loading Normals
-	GLuint normalBuffer;
-	glGenBuffers(1, &normalBuffer);
-	glBindBuffer(GL_ARRAY_BUFFER, normalBuffer);
-	glBufferData(GL_ARRAY_BUFFER, normals.size() * sizeof(glm::vec3), &normals[0], GL_STATIC_DRAW);
+	for (model& model : models) {
+		// Loading Vertices
+		glGenBuffers(1, &model.vertexBuffer);
+		glBindBuffer(GL_ARRAY_BUFFER, model.vertexBuffer);
+		glBufferData(GL_ARRAY_BUFFER, model.vertices.size() * sizeof(glm::vec3), &model.vertices[0], GL_STATIC_DRAW);
+
+		// Loading UVs
+		glGenBuffers(1, &model.uvBuffer);
+		glBindBuffer(GL_ARRAY_BUFFER, model.uvBuffer);
+		glBufferData(GL_ARRAY_BUFFER, model.uvs.size() * sizeof(glm::vec2), &model.uvs[0], GL_STATIC_DRAW);
+
+		// Loading Normals
+		glGenBuffers(1, &model.normalBuffer);
+		glBindBuffer(GL_ARRAY_BUFFER, model.normalBuffer);
+		glBufferData(GL_ARRAY_BUFFER, model.normals.size() * sizeof(glm::vec3), &model.normals[0], GL_STATIC_DRAW);
+	}
+	
+	// enable blending
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	// Get a handle for our "LightPosition" uniform
 	glUseProgram(programID);
@@ -276,6 +292,8 @@ void GraphicsService::run() {
 	int nbFrames = 0;
 
 	unsigned long counter = 0;
+
+	int lodIndex = 0;
 
 	while (!glfwWindowShouldClose(window)) {
 		double currentTime = glfwGetTime();
@@ -296,7 +314,11 @@ void GraphicsService::run() {
 		glUseProgram(programID);
 
 		// Compute the MVP matrix from keyboard and mouse input
-		GraphicsService::cService->ComputeMatricesFromInput();
+		cService->ComputeMatricesFromInput();
+
+		// LOD index calculation
+		lodIndex = glm::min(2, (int)cService->getDistanceFromOrigin() / 10);
+
 		glm::mat4 ProjectionMatrix = ControlService::getProjectionMatrix();
 		glm::mat4 ViewMatrix = ControlService::getViewMatrix();
 		glm::mat4 ModelMatrix = glm::mat4(1.0);
@@ -309,8 +331,14 @@ void GraphicsService::run() {
 		glUniformMatrix4fv(viewMatrixID, 1, GL_FALSE, &ViewMatrix[0][0]);
 
 		// Lighting
-		glm::vec3 lightPos = glm::vec3(4, 4, 4);
+		glm::vec3 lightPos = glm::vec3(10, 4, 4);
 		glUniform3f(LightID, lightPos.x, lightPos.y, lightPos.z);
+
+		// Alpha
+		float alpha = ControlService::getTransparent() ? 0.5f : 1.0f;
+		printf("%f\n", alpha);
+		glUniform1f(glGetUniformLocation(programID, "alpha"), alpha);
+		
 
 		// Bind our texture in Texture Unit 0
 		glActiveTexture(GL_TEXTURE0);
@@ -321,7 +349,7 @@ void GraphicsService::run() {
 		
 		// Setup Vertex Buffer
 		glEnableVertexAttribArray(0);
-		glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
+		glBindBuffer(GL_ARRAY_BUFFER, models[lodIndex].vertexBuffer);
 		glVertexAttribPointer(
 			0, 
 			3,
@@ -332,7 +360,7 @@ void GraphicsService::run() {
 
 		// Setup UV Buffer
 		glEnableVertexAttribArray(1);
-		glBindBuffer(GL_ARRAY_BUFFER, uvbuffer);
+		glBindBuffer(GL_ARRAY_BUFFER, models[lodIndex].uvBuffer);
 		glVertexAttribPointer(
 			1,
 			2,
@@ -343,7 +371,7 @@ void GraphicsService::run() {
 
 		// Normal Buffer
 		glEnableVertexAttribArray(2);
-		glBindBuffer(GL_ARRAY_BUFFER, normalBuffer);
+		glBindBuffer(GL_ARRAY_BUFFER, models[lodIndex].normalBuffer);
 		glVertexAttribPointer(
 			2,
 			3, 
@@ -351,28 +379,11 @@ void GraphicsService::run() {
 			GL_FALSE,
 			0, 
 			(void*) 0);
-
-		
-		for (unsigned int i = 0; i < 10; i++)
-		{
-			glm::mat4 model = glm::mat4(1.0f);
-			if (i == 4) {
-				mvp = glm::translate(mvp, glm::vec3(counter / 100.0, 0, 0));
-			} else {
-				mvp = glm::translate(mvp, cubePositions[i]);
-			}
-
-			float angle = 20.0f * i;
-			mvp = glm::rotate(mvp, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
-			glUniformMatrix4fv(matrixID, 1, GL_FALSE, &mvp[0][0]);
-
-			glDrawArrays(GL_TRIANGLES, 0, vertices.size());
-		}
 		
 		//mvp = glm::translate(mvp, glm::vec3(5, -10, 0));
 		//glUniformMatrix4fv(matrixID, 1, GL_FALSE, &mvp[0][0]);
 
-		glDrawArrays(GL_TRIANGLES, 0, vertices.size());
+		glDrawArrays(GL_TRIANGLES, 0, models[lodIndex].vertices.size());
 
 		glDisableVertexAttribArray(0);
 		glDisableVertexAttribArray(1);
@@ -385,9 +396,12 @@ void GraphicsService::run() {
 		glfwPollEvents();
 	}
 
-	glDeleteBuffers(1, &vertexBuffer);
-	glDeleteBuffers(1, &uvbuffer);
-	glDeleteBuffers(1, &normalBuffer);
+	for (model model : models) {
+		glDeleteBuffers(1, &model.vertexBuffer);
+		glDeleteBuffers(1, &model.uvBuffer);
+		glDeleteBuffers(1, &model.normalBuffer);
+	}
+	
 	glDeleteProgram(programID);
 	glDeleteTextures(1, &texture);
 	glDeleteVertexArrays(1, &vertexArrayID);
